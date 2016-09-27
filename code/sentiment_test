@@ -1,6 +1,4 @@
 import pandas as pd   
-import numpy as np
-
 from bs4 import BeautifulSoup 
 import re
 from nltk.corpus import stopwords # Import the stop word list
@@ -28,15 +26,15 @@ def clean_review(raw_review):
 	return( " ".join( stemmed_words ))
 
 
-train = pd.read_csv("C:/Users/Ash/Documents/GitHub/nlp_bow/data/labeledTrainData.tsv", header=0, delimiter="\t", quoting=3)
-print(train.shape)
-# print train.columns.values
-num_reviews = train["review"].size
+test = pd.read_csv("C:/Users/Ash/Documents/GitHub/nlp_bow/data/testData.tsv", header=0, delimiter="\t", quoting=3)
+print(test.shape)
+# print test.columns.values
+num_reviews = test["review"].size
 clean_reviews = []
 for i in range(num_reviews):
 	if( (i+1)%1000 == 0 ):
 		print "Review %d of %d\n" % ( i+1, num_reviews )                                                          
-	clean_reviews.append(clean_review(train["review"][i]))
+	clean_reviews.append(clean_review(test["review"][i]))
 
 print "Creating the bag of words...\n"
 from sklearn.feature_extraction.text import CountVectorizer
@@ -50,37 +48,25 @@ vectorizer = CountVectorizer(analyzer = "word",   \
                              max_features = 5000) 
 
 # fit_transform() does two functions: First, it fits the model
-# and learns the vocabulary; second, it transforms our training data
+# and learns the vocabulary; second, it transforms our testing data
 # into feature vectors. The input to fit_transform should be a list of 
 # strings.
-train_data_features = np.array(vectorizer.fit_transform(clean_reviews))
+test_data_features = vectorizer.fit_transform(clean_reviews)
 
 # Numpy arrays are easy to work with, so convert the result to an 
 # array
-# train_data_features = train_data_features.toarray()
+test_data_features = test_data_features.toarray()
 # Take a look at the words in the vocabulary
 vocab = vectorizer.get_feature_names()
 print vocab
 
+import numpy as np
 
 # Sum up the counts of each vocabulary word
-dist = np.sum(train_data_features, axis=0)
+dist = np.sum(test_data_features, axis=0)
 
 # For each, print the vocabulary word and the number of times it 
-# appears in the training set
+# appears in the testing set
 for tag, count in zip(vocab, dist):
     print count, tag
-
-print "Training the random forest..."
-from sklearn.ensemble import RandomForestClassifier
-
-# Initialize a Random Forest classifier with 100 trees
-forest = RandomForestClassifier(n_estimators = 100) 
-
-# Fit the forest to the training set, using the bag of words as 
-# features and the sentiment labels as the response variable
-#
-# This may take a few minutes to run
-forest = forest.fit( train_data_features, train["sentiment"] )
-
 
